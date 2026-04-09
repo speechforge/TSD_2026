@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TSD 2026 Research Portal</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #1a1a1a;
+            --card-bg: #f8f9fa;
+            --accent-color: #2c3e50;
+            --btn-color: #007bff;
+            /* We control the scale via the font-size on the HTML element */
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --text-color: #f0f0f0;
+            --card-bg: #1e1e1e;
+            --accent-color: #ecf0f1;
+        }
+
+        /* UNIVERSAL FONT EFFECT: All elements use 'rem' so they scale with the root */
+        html {
+            font-size: 100%; /* Default 16px */
+            transition: font-size 0.2s ease-in-out;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background 0.3s ease;
+            margin: 0;
+            padding-top: 100px; /* Space for the fixed toolbar */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* FIXED TOOLBAR: This will NOT move or jump when zooming */
+        .accessibility-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: var(--card-bg);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            border-bottom: 2px solid var(--accent-color);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .acc-btn {
+            background: var(--accent-color);
+            color: var(--bg-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem; /* Proportional */
+            font-weight: bold;
+        }
+
+        .header-section { text-align: center; margin-bottom: 2rem; }
+        h1 { font-size: 2.5rem; margin: 0; }
+        .subtitle { font-size: 1.2rem; font-weight: 300; letter-spacing: 4px; text-transform: uppercase; }
+
+        .controls select {
+            padding: 0.8rem;
+            border-radius: 8px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            margin: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .display-area {
+            width: 90%;
+            max-width: 950px;
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            margin-bottom: 50px;
+        }
+
+        .tts-btn {
+            background: var(--btn-color);
+            color: white;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 20px;
+            cursor: pointer;
+            margin: 1rem 0;
+            font-size: 1rem;
+        }
+
+        img { 
+            max-width: 100%; 
+            height: auto; 
+            border-radius: 10px; 
+            margin-top: 1.5rem; 
+            border: 1px solid #ccc; 
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body data-theme="light">
+
+    <div class="accessibility-bar">
+        <span style="font-weight: bold;">Accessibility:</span>
+        <button class="acc-btn" onclick="changeFontSize(-1)">A-</button>
+        <button class="acc-btn" onclick="resetFontSize()">Default</button>
+        <button class="acc-btn" onclick="changeFontSize(1)">A+</button>
+        <button class="acc-btn" onclick="toggleTheme()">🌓 Theme</button>
+    </div>
+
+    <div class="header-section">
+        <h1>TSD 2026</h1>
+        <div class="subtitle">Appendix</div>
+    </div>
+
+    <div class="controls">
+        <select id="mainSelect" onchange="syncMenus()">
+            <option value="">Select Section</option>
+            <option value="1">Appendix 1: Speech Evaluation</option>
+            <option value="2">Appendix 2: t-SNE Analysis</option>
+        </select>
+
+        <select id="sub1" class="hidden" onchange="renderContent()">
+            <option value="">-- Select Measure --</option>
+            <option value="subj">Subjective Measures</option>
+            <option value="obj">Objective Measures</option>
+        </select>
+
+        <select id="sub2" class="hidden" onchange="renderContent()">
+            <option value="">-- Select Plot --</option>
+            <option value="accents">Noise t-SNE (Accents)</option>
+            <option value="noises">Noise t-SNE (Noises)</option>
+        </select>
+    </div>
+
+    <div class="display-area" id="viewer">
+        <p>Please select a category from the dropdown menus.</p>
+    </div>
+
+    <script>
+        const viewer = document.getElementById('viewer');
+        const main = document.getElementById('mainSelect');
+        const s1 = document.getElementById('sub1');
+        const s2 = document.getElementById('sub2');
+
+        // UNIVERSAL SCALING LOGIC
+        // Level 1: 75%, Level 2: 85%, Level 3: 100%, Level 4: 125%, Level 5: 150%
+        let scaleIndex = 2; // Default (Index 2 is 100%)
+        const scales = ["75%", "85%", "100%", "125%", "150%"];
+
+        function changeFontSize(direction) {
+            scaleIndex = Math.min(Math.max(scaleIndex + direction, 0), 4);
+            document.documentElement.style.fontSize = scales[scaleIndex];
+        }
+
+        function resetFontSize() {
+            scaleIndex = 2;
+            document.documentElement.style.fontSize = scales[2];
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const current = body.getAttribute('data-theme');
+            body.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+        }
+
+        function syncMenus() {
+            s1.classList.add('hidden');
+            s2.classList.add('hidden');
+            viewer.innerHTML = '<p>Please choose a sub-category.</p>';
+            if (main.value === "1") s1.classList.remove('hidden');
+            if (main.value === "2") s2.classList.remove('hidden');
+        }
+
+        function renderContent() {
+            let title = "", description = "", imgSrc = "";
+
+            if (main.value === "1") {
+                if (s1.value === "subj") {
+                    title = "Subjective Measures";
+                    description = "Figure 1: This visualization is in the GIF format with the 100 millisecond frame delay.";
+                }
+                if (s1.value === "obj") {
+                    title = "Objective Measures";
+                    description = "Figure 1: This visualization is in the GIF format with the 100 millisecond frame delay.";
+                }
+            } else if (main.value === "2") {
+                if (s2.value === "accents") {
+                    title = "t-SNE: Accent Highlights";
+                    description = "Figure 1: This visualization is in the GIF format with the 100 millisecond frame delay.";
+                    imgSrc = "noise_tsne_accents.gif";
+                }
+                if (s2.value === "noises") {
+                    title = "t-SNE: Noise Highlights";
+                    description = "Figure 1: This visualization is in the GIF format with the 100 millisecond frame delay.";
+                    imgSrc = "noise_tsne_final.gif";
+                }
+            }
+
+            if (title) {
+                viewer.innerHTML = `
+                    <h2>${title}</h2>
+                    <button class="tts-btn" onclick="runTTS()">🔊 Read Description</button>
+                    <p id="descriptionText">${description}</p>
+                    ${imgSrc ? `<img src="${imgSrc}" alt="Visualization">` : ""}
+                `;
+            }
+        }
+
+        function runTTS() {
+            const text = document.getElementById('descriptionText').innerText;
+            const utterance = new SpeechSynthesisUtterance(text);
+            window.speechSynthesis.speak(utterance);
+        }
+    </script>
+</body>
+</html>
